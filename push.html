@@ -19,6 +19,10 @@
             outline: none;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4);
         }
+        /* スマホでのダブルタップによる拡大を防止 */
+        .btn {
+            touch-action: manipulation;
+        }
         /* プレイヤーと敵のバーのトランジション */
         #player-bar, #enemy-bar {
             transition: height 0.05s linear;
