@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>誤操作誘発型ゲーム（タイミングゲーム版）</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 日本語フォントと基本フォントファミリーを設定 */
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* スマホでのタップ時のハイライトを無効化 */
+        }
+        /* ボタンのフォーカスリングをカスタム */
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        }
+        /* 最初は非表示にしておく */
+        #trap-button {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease-in-out;
+        }
+        
+        /* 画面を赤くフラッシュさせるためのアニメーション */
+        @keyframes flash-animation {
+            50% { background-color: #ef4444; } /* red-500 */
+        }
+        /* アニメーションを適用するクラス */
+        .is-flashing {
+            /* 0.15秒のアニメーションを4回繰り返す */
+            animation: flash-animation 0.15s 4;
+        }
+        .dark .is-flashing {
+             animation-name: flash-animation-dark;
+        }
+        @keyframes flash-animation-dark {
+             50% { background-color: #b91c1c; } /* red-700 */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center min-h-screen p-4 text-gray-800 dark:text-gray-200">
+
+    <div class="w-full max-w-sm mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
+        
+        <h1 class="text-2xl font-bold text-center text-indigo-600 dark:text-indigo-400">タイミングチャレンジ</h1>
+
+        <!-- ゲーム表示エリア -->
+        <div class="flex justify-center items-end h-80">
+            <div id="game-container" class="relative w-24 h-full bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden border-4 border-gray-900 dark:border-gray-600">
+                <!-- 動くバー -->
+                <div id="progress-bar" class="absolute bottom-0 w-full bg-purple-600" style="height: 0%;"></div>
+                <!-- ターゲットライン -->
+                <div id="target-line" class="absolute w-full h-1 bg-red-500" style="bottom: 80%;"></div>
+            </div>
+        </div>
+
+        <!-- 結果表示エリア -->
+        <div id="result-message" class="text-center font-bold text-xl h-7">&nbsp;</div>
+
+        <!-- 操作ボタンエリア (クリックジャッキングのため相対配置) -->
+        <div class="relative mt-8">
+            <!-- 通常の操作ボタン -->
+            <button id="start-stop-button" class="btn w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-200 shadow-md">
+                START
+            </button>
+            <!-- クリックジャッキング用のトラップボタン -->
+            <button id="trap-button" class="btn absolute top-0 left-0 w-full h-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-green-600 active:bg-green-700 shadow-lg">
+                無料ポイントGET！
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const body = document.body;
+        const startStopButton = document.getElementById('start-stop-button');
+        const trapButton = document.getElementById('trap-button');
+        const progressBar = document.getElementById('progress-bar');
+        const resultMessage = document.getElementById('result-message');
+
+        // ゲームの状態を管理する変数
+        let isGameRunning = false;
+        let gameInterval = null;
+        let currentProgress = 0;
+        let trapWillBeActivated = false;
+        
+        // ターゲットの位置と許容範囲
+        const targetPosition = 80; 
+        const tolerance = 2.5;
+        // トラップが発動する少し手前の位置
+        const trapActivationPoint = targetPosition - 8; 
+
+        /**
+         * ゲームを開始または停止する
+         */
+        function toggleGame() {
+            if (isGameRunning) {
+                stopGame();
+            } else {
+                startGame();
+            }
+        }
+
+        /**
+         * ゲームを開始する
+         */
+        function startGame() {
+            hideTrapButton();
+
+            // 一定の確率でトラップを仕掛ける
+            trapWillBeActivated = Math.random() < 0.3;
+
+            isGameRunning = true;
+            startStopButton.textContent = 'STOP';
+            startStopButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            startStopButton.classList.add('bg-red-500', 'hover:bg-red-600');
+            resultMessage.textContent = ' ';
+            currentProgress = 0;
+            progressBar.style.height = '0%';
+            
+            // スピードをランダムに設定
+            const speed = Math.random() * 4 + 10;
+            const updateInterval = 1000 / (speed * 10);
+
+            gameInterval = setInterval(() => {
+                currentProgress += 0.5;
+                progressBar.style.height = currentProgress + '%';
+                
+                // トラップ発動条件：トラップが仕掛けられていて、特定の位置に到達した
+                if (trapWillBeActivated && currentProgress >= trapActivationPoint) {
+                    activateTrap();
+                    trapWillBeActivated = false; // 一度発動したらフラグを下ろす
+                }
+
+                if (currentProgress >= 100) {
+                    stopGame(true);
+                }
+            }, updateInterval);
+        }
+
+        /**
+         * ゲームを停止する
+         */
+        function stopGame(overshoot = false) {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            startStopButton.textContent = 'START';
+            startStopButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            startStopButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            
+            checkResult(overshoot);
+        }
+
+        /**
+         * 結果を判定して表示する
+         */
+        function checkResult(overshoot) {
+            // トラップボタンが表示されていたら、結果判定せずに隠すだけ
+            if (trapButton.style.opacity === '1') {
+                hideTrapButton();
+                resultMessage.textContent = 'おしい！トラップは回避！';
+                resultMessage.style.color = '#f97316'; // orange-500
+                return;
+            }
+
+            if (overshoot) {
+                resultMessage.textContent = '遅すぎ！';
+                resultMessage.style.color = '#ef4444'; // red-500
+                return;
+            }
+
+            const difference = Math.abs(currentProgress - targetPosition);
+            
+            if (difference <= tolerance) {
+                resultMessage.textContent = '成功！ 🎉';
+                resultMessage.style.color = '#22c55e'; // green-500
+            } else if (currentProgress < targetPosition) {
+                resultMessage.textContent = '早すぎ！';
+                resultMessage.style.color = '#f97316'; // orange-500
+            } else {
+                resultMessage.textContent = '遅すぎ！';
+                resultMessage.style.color = '#ef4444'; // red-500
+            }
+        }
+        
+        /**
+         * トラップボタンを表示し、STOPボタンを無効化する
+         */
+        function activateTrap() {
+            startStopButton.style.pointerEvents = 'none'; // 下のボタンを押せなくする
+            trapButton.style.opacity = '1';
+            trapButton.style.pointerEvents = 'auto';
+        }
+        
+        /**
+         * トラップボタンを非表示にし、START/STOPボタンを有効化する
+         */
+        function hideTrapButton() {
+            startStopButton.style.pointerEvents = 'auto'; // 下のボタンを押せるように戻す
+            trapButton.style.opacity = '0';
+            trapButton.style.pointerEvents = 'none';
+        }
+
+        // --- イベントリスナー ---
+        startStopButton.addEventListener('click', toggleGame);
+        
+        // トラップボタンがクリックされた時の処理
+        trapButton.addEventListener('click', () => {
+            // 画面をフラッシュ
+            body.classList.add('is-flashing');
+            resultMessage.textContent = 'トラップ成功！騙されましたね？';
+            resultMessage.style.color = '#3b82f6'; // blue-500
+
+            // ゲームを強制的に終了状態にする
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            startStopButton.textContent = 'START';
+             startStopButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            startStopButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+
+            hideTrapButton();
+
+            // アニメーションが終わったらクラスを削除
+            setTimeout(() => {
+                body.classList.remove('is-flashing');
+            }, 600); // アニメーション時間 (0.15s * 4)
+        });
+
+    </script>
+</body>
+</html>
