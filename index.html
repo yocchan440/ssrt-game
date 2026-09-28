@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>「押しちゃった！」はなぜ起きる？ — 誤操作をさそうワナの研究</title>
+<meta name="description" content="連打ゲームとタイミングゲームを使って、人の反応のおくれ（ストップ信号反応時間）を悪用する攻撃のしくみを、中高生向けにやさしく解説します。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ===== カラーユニバーサルデザイン対応パレット（岡部・伊藤配色） =====
+   色だけに意味を持たせず、必ず「記号・文字・線の形」でも区別できるようにしています */
+:root{
+  --blue:      #0072B2;  /* 青 */
+  --blue-soft: #e3f0f8;
+  --sky:       #56B4E9;  /* 空色 */
+  --green:     #009E73;  /* 緑 */
+  --green-soft:#e0f4ee;
+  --orange:    #E69F00;  /* 橙 */
+  --orange-soft:#fdf2dd;
+  --verm:      #D55E00;  /* 朱 */
+  --verm-soft: #fdeae0;
+  --purple:    #CC79A7;  /* 赤紫 */
+  --purple-soft:#fbecf3;
+  --yellow:    #F0E442;  /* 黄 */
+
+  --ink:       #16202b;
+  --ink-mid:   #46586b;
+  --ink-weak:  #6d7f90;
+  --line:      #d6dee6;
+  --line-soft: #e8edf2;
+  --bg:        #f5f7fa;
+  --card:      #ffffff;
+
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(22,32,43,.06), 0 6px 20px rgba(22,32,43,.06);
+  --maxw: 900px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:74px}
+body{
+  margin:0;
+  font-family:'Noto Sans JP',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.85;
+  font-size:16px;
+  -webkit-text-size-adjust:100%;
+}
+img{max-width:100%}
+a{color:var(--blue)}
+
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px}
+
+/* ===== ヘッダー ===== */
+.hero{
+  background:linear-gradient(160deg,#ffffff 0%, #eaf2f8 100%);
+  border-bottom:3px solid var(--blue);
+  padding:56px 0 44px;
+}
+.hero .tag{
+  display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.08em;
+  color:var(--blue); background:var(--blue-soft);
+  border:1px solid var(--blue); border-radius:999px; padding:4px 14px; margin-bottom:18px;
+}
+.hero h1{
+  font-size:clamp(1.6rem,5vw,2.5rem); font-weight:900; line-height:1.4;
+  margin:0 0 14px; letter-spacing:-.01em;
+}
+.hero h1 .mark{
+  background:linear-gradient(transparent 62%, var(--yellow) 62%);
+  padding:0 .1em;
+}
+.hero p.lead{font-size:1.05rem; color:var(--ink-mid); margin:0 0 26px; max-width:40em}
+.hero .meta{font-size:.85rem; color:var(--ink-weak)}
+
+.hero-btns{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:26px}
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:inherit; font-size:1rem; font-weight:700;
+  padding:13px 22px; border-radius:10px; border:2px solid transparent;
+  text-decoration:none; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(22,32,43,.15)}
+.btn:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.btn-blue{background:var(--blue); color:#fff}
+.btn-purple{background:#a8548a; color:#fff}
+.btn-ghost{background:#fff; color:var(--blue); border-color:var(--blue)}
+
+/* ===== ナビ ===== */
+nav.toc{
+  position:sticky; top:0; z-index:50;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+nav.toc ul{
+  list-style:none; margin:0 auto; padding:0 20px; max-width:var(--maxw);
+  display:flex; gap:4px; overflow-x:auto; scrollbar-width:thin;
+}
+nav.toc a{
+  display:block; white-space:nowrap; padding:13px 12px;
+  font-size:.86rem; font-weight:700; color:var(--ink-mid); text-decoration:none;
+  border-bottom:3px solid transparent;
+}
+nav.toc a:hover{color:var(--blue); border-bottom-color:var(--sky)}
+
+/* ===== セクション ===== */
+section{padding:52px 0; border-top:1px solid var(--line-soft)}
+section:first-of-type{border-top:none}
+h2{
+  font-size:clamp(1.25rem,3.6vw,1.65rem); font-weight:900; margin:0 0 6px;
+  display:flex; align-items:center; gap:12px; line-height:1.4;
+}
+h2 .num{
+  flex:none; width:34px; height:34px; border-radius:9px;
+  background:var(--blue); color:#fff; font-size:1rem;
+  display:grid; place-items:center;
+}
+h2 + .sub{color:var(--ink-weak); font-size:.9rem; margin:0 0 26px; padding-left:46px}
+h3{font-size:1.1rem; font-weight:700; margin:30px 0 10px}
+
+.card{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); margin:18px 0;
+}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media(max-width:700px){ .grid2{grid-template-columns:1fr} }
+
+/* 注意ボックス */
+.note{
+  border-left:6px solid var(--orange); background:var(--orange-soft);
+  border-radius:8px; padding:16px 20px; margin:20px 0;
+}
+.note.blue{border-left-color:var(--blue); background:var(--blue-soft)}
+.note.green{border-left-color:var(--green); background:var(--green-soft)}
+.note.verm{border-left-color:var(--verm); background:var(--verm-soft)}
+.note b{display:block; margin-bottom:4px}
+
+/* ===== ステップ（反応のおくれ） ===== */
+.steps{list-style:none; padding:0; margin:22px 0; counter-reset:s}
+.steps li{
+  counter-increment:s; position:relative;
+  padding:14px 14px 14px 62px; margin-bottom:10px;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+}
+.steps li::before{
+  content:counter(s); position:absolute; left:16px; top:14px;
+  width:30px; height:30px; border-radius:50%;
+  background:var(--blue-soft); color:var(--blue); border:2px solid var(--blue);
+  font-weight:900; display:grid; place-items:center; font-size:.95rem;
+}
+
+/* ===== タイムライン図 ===== */
+.timeline{
+  position:relative; background:#fff; border:1px solid var(--line);
+  border-radius:12px; padding:26px 20px 20px; margin:22px 0;
+}
+.tl-track{
+  position:relative; height:46px; border-radius:8px;
+  background:repeating-linear-gradient(90deg,#eef2f6 0 9px,#e4eaf0 9px 10px);
+  border:1px solid var(--line); overflow:hidden;
+}
+.tl-zone{position:absolute; top:0; bottom:0; display:grid; place-items:center;
+  font-size:.75rem; font-weight:700; color:#fff; letter-spacing:.02em}
+.tl-see  {left:0;   width:38%; background:var(--blue)}
+.tl-think{left:38%; width:34%; background:var(--green);
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px)}
+.tl-stop {left:72%; width:28%; background:var(--verm);
+  background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,.3) 0 5px,transparent 5px 10px)}
+.tl-runner{
+  position:absolute; top:-9px; left:0; width:4px; height:64px;
+  background:var(--ink); border-radius:2px; transition:none;
+}
+.tl-runner::after{
+  content:'▼'; position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+  font-size:.8rem; color:var(--ink);
+}
+.tl-trap{
+  position:absolute; left:62%; top:-9px; bottom:-9px; width:3px;
+  background:var(--orange); opacity:0;
+}
+.tl-trap::after{
+  content:'ワナ出現'; position:absolute; bottom:-24px; left:50%; transform:translateX(-50%);
+  white-space:nowrap; font-size:.72rem; font-weight:700; color:var(--verm);
+}
+.tl-trap.on{opacity:1}
+.tl-scale{display:flex; justify-content:space-between; font-size:.72rem; color:var(--ink-weak); margin-top:26px}
+.tl-msg{
+  margin-top:14px; min-height:2.6em; font-weight:700; font-size:.98rem;
+  padding:10px 14px; border-radius:8px; background:#f2f5f8; border:1px solid var(--line);
+}
+
+/* ===== 反応時間テスト ===== */
+.rt-box{
+  border-radius:12px; border:2px solid var(--line); background:#fff;
+  padding:22px; text-align:center;
+}
+.rt-pad{
+  width:100%; min-height:150px; border-radius:10px; border:3px dashed var(--line);
+  background:#f2f5f8; color:var(--ink-mid); font-weight:700; font-size:1.05rem;
+  display:grid; place-items:center; cursor:pointer; user-select:none;
+  font-family:inherit; padding:16px; line-height:1.6;
+}
+.rt-pad.waiting{background:var(--verm); border:3px solid var(--verm); border-style:solid; color:#fff}
+.rt-pad.go{background:var(--green); border:3px solid var(--green); border-style:solid; color:#fff; font-size:1.5rem}
+.rt-pad:focus-visible{outline:4px solid var(--ink); outline-offset:3px}
+.rt-result{margin-top:14px; font-size:.95rem; color:var(--ink-mid); min-height:3em}
+.rt-result strong{font-size:1.6rem; color:var(--blue)}
+
+/* ===== デモカード ===== */
+.demo{
+  border:2px solid var(--line); border-radius:var(--radius);
+  background:#fff; overflow:hidden; margin:22px 0; box-shadow:var(--shadow);
+}
+.demo-head{padding:20px 24px; border-bottom:1px solid var(--line-soft)}
+.demo-a .demo-head{background:var(--blue-soft); border-bottom:3px solid var(--blue)}
+.demo-b .demo-head{background:var(--purple-soft); border-bottom:3px solid #a8548a}
+.demo-head .kind{
+  font-size:.75rem; font-weight:700; letter-spacing:.06em;
+  display:inline-block; padding:3px 10px; border-radius:999px; background:#fff;
+  border:1px solid currentColor; margin-bottom:8px;
+}
+.demo-a .kind{color:var(--blue)}
+.demo-b .kind{color:#a8548a}
+.demo-head h3{margin:0; font-size:1.3rem; font-weight:900}
+.demo-head p{margin:6px 0 0; font-size:.92rem; color:var(--ink-mid)}
+.demo-body{padding:22px 24px}
+.demo-body h4{
+  font-size:.95rem; margin:20px 0 8px; padding-left:12px;
+  border-left:5px solid var(--sky); font-weight:700;
+}
+.demo-body h4:first-child{margin-top:0}
+
+/* 数値バッジ */
+.specs{display:flex; flex-wrap:wrap; gap:10px; margin:12px 0}
+.spec{
+  flex:1 1 150px; border:1px solid var(--line); border-radius:10px;
+  padding:12px 14px; background:#fafbfc;
+}
+.spec .label{font-size:.75rem; color:var(--ink-weak); display:block}
+.spec .value{font-size:1.25rem; font-weight:900; color:var(--blue)}
+.spec .value small{font-size:.8rem; font-weight:700}
+
+/* ===== 表 ===== */
+.table-scroll{overflow-x:auto; margin:18px 0}
+table{border-collapse:collapse; width:100%; min-width:520px; background:#fff; font-size:.92rem}
+th,td{border:1px solid var(--line); padding:12px 14px; text-align:left; vertical-align:top}
+thead th{background:#eef3f7; font-weight:700; white-space:nowrap}
+tbody th{background:#f7f9fb; font-weight:700; white-space:nowrap}
+
+/* ===== 攻撃のしくみ図 ===== */
+.flow{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0}
+@media(max-width:700px){ .flow{grid-template-columns:1fr 1fr} }
+.flow .step{
+  background:#fff; border:2px solid var(--line); border-radius:10px;
+  padding:14px 12px; text-align:center; position:relative;
+}
+.flow .step .ico{font-size:1.6rem; display:block; line-height:1.2}
+.flow .step .t{font-weight:700; font-size:.88rem; margin-top:6px; display:block}
+.flow .step .d{font-size:.78rem; color:var(--ink-weak); display:block; margin-top:2px}
+.flow .step.hot{border-color:var(--verm); background:var(--verm-soft)}
+
+/* ===== 対策リスト ===== */
+.checks{list-style:none; padding:0; margin:18px 0}
+.checks li{
+  background:#fff; border:1px solid var(--line); border-left:6px solid var(--green);
+  border-radius:10px; padding:14px 18px 14px 50px; margin-bottom:10px; position:relative;
+}
+.checks li::before{
+  content:'✓'; position:absolute; left:18px; top:13px;
+  color:var(--green); font-weight:900; font-size:1.2rem;
+}
+.checks li b{display:block}
+
+/* ===== 用語集 ===== */
+details{
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+  padding:0; margin-bottom:10px; overflow:hidden;
+}
+summary{
+  cursor:pointer; padding:14px 18px; font-weight:700; list-style:none;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'＋'; color:var(--blue); font-weight:900; flex:none}
+details[open] summary::after{content:'−'}
+summary:hover{background:var(--blue-soft)}
+summary:focus-visible{outline:3px solid var(--ink); outline-offset:-3px}
+details .body{padding:0 18px 16px; color:var(--ink-mid); font-size:.94rem; border-top:1px solid var(--line-soft); padding-top:14px}
+
+/* ===== フッター ===== */
+footer{background:#16202b; color:#c8d4de; padding:40px 0 48px; font-size:.86rem}
+footer h2{color:#fff; font-size:1.05rem; margin-bottom:14px}
+footer h2 .num{background:#3d5063}
+footer ol{padding-left:1.3em; margin:0 0 20px}
+footer li{margin-bottom:10px; line-height:1.7}
+footer a{color:var(--sky)}
+footer .credit{border-top:1px solid #2c3a49; padding-top:18px; color:#8496a6; font-size:.8rem}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= ヒーロー ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">ヒューマンインタフェース × 情報セキュリティ</span>
+    <h1>「あっ、<span class="mark">押しちゃった！</span>」は<br>なぜ起きるんだろう？</h1>
+    <p class="lead">
+      スマホを使っていて、押すつもりのなかったボタンを押してしまった経験はありませんか。
+      じつはそれ、「人間の反応はほんの少しおくれる」という性質を<strong>わざと利用したワナ</strong>かもしれません。
+      ここでは、そのしくみを体験できる2つのゲームを使って、やさしく説明します。
+    </p>
+    <div class="hero-btns">
+      <a class="btn btn-blue" href="push.html">▶ 連打バトルで体験する</a>
+      <a class="btn btn-purple" href="timming.html">▶ タイミングチャレンジで体験する</a>
+      <a class="btn btn-ghost" href="#shikumi">まず、しくみを読む</a>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 目次 ================= -->
+<nav class="toc" aria-label="目次">
+  <ul>
+    <li><a href="#shikumi">1. しくみ</a></li>
+    <li><a href="#taiken">2. 反応時間テスト</a></li>
+    <li><a href="#demo">3. 2つのゲーム</a></li>
+    <li><a href="#hikaku">4. くらべてみる</a></li>
+    <li><a href="#kenkyu">5. 研究とのつながり</a></li>
+    <li><a href="#mamoru">6. 身を守るには</a></li>
+    <li><a href="#yougo">7. 用語集</a></li>
+  </ul>
+</nav>
+
+<main class="wrap">
+
+<!-- ================= 1. しくみ ================= -->
+<section id="shikumi">
+  <h2><span class="num">1</span>そもそも、どんなワナなの？</h2>
+  <p class="sub">キーワードは「人間はすぐには止まれない」</p>
+
+  <p>
+    スマホやパソコンは、大事な操作をするときに必ず<strong>確認画面</strong>を出します。
+    「このアプリをインストールしますか？」「カメラの利用を許可しますか？」といったあれです。
+    最後に決めるのは人間なので、ここが安全のための最後のとりでになっています。
+  </p>
+  <p>
+    ところが、最後に決めるのが人間だからこそ、<strong>人間のクセをねらった攻撃</strong>が成り立ってしまいます。
+    その代表が、これから説明する<strong>誤操作誘発型（ごそうさゆうはつがた）の攻撃</strong>です。
+  </p>
+
+  <div class="note blue">
+    <b>いちばん大事な考え方</b>
+    人は「危ない！」と気づいてから、実際に手を止めるまでに<strong>0.2〜0.3秒ほどかかります</strong>。
+    この「気づいたのに、もう止められない」時間のことを、研究では
+    <strong>ストップ信号反応時間（SSRT）</strong>と呼びます。
+  </div>
+
+  <h3>ボタンを押すまでに、頭の中で起きていること</h3>
+  <ol class="steps">
+    <li><b>目で見る</b>　画面にボタンがあることを目がとらえます。</li>
+    <li><b>脳が判断する</b>　「これを押そう」と決めます。</li>
+    <li><b>指に命令が届く</b>　脳から指へ「押せ」という信号が伝わります。</li>
+    <li><b>指が動く</b>　ここまで来ると、もう途中では止められません。</li>
+  </ol>
+  <p>
+    攻撃者は、<strong>3番と4番のあいだ</strong>をねらいます。
+    「押そう」と決めた直後に、指が動きはじめるよりわずかに早く画面をこっそり入れかえるのです。
+    目は新しい画面に気づきますが、指はもう止まりません。こうして「押すつもりのなかったボタン」が押されてしまいます。
+  </p>
+
+  <h3>アニメーションで見てみよう</h3>
+  <div class="timeline">
+    <div class="tl-track" id="tlTrack">
+      <div class="tl-zone tl-see">見る</div>
+      <div class="tl-zone tl-think">決める</div>
+      <div class="tl-zone tl-stop">もう止まれない</div>
+      <div class="tl-trap" id="tlTrap"></div>
+      <div class="tl-runner" id="tlRunner"></div>
+    </div>
+    <div class="tl-scale"><span>0秒</span><span>0.15秒</span><span>0.3秒</span></div>
+    <p class="tl-msg" id="tlMsg">「▶ 動かす」を押すと、ボタンを押すまでの流れを再生します。</p>
+    <button class="btn btn-blue" id="tlBtn" type="button">▶ 動かす</button>
+  </div>
+  <p>
+    オレンジの線が、攻撃者が別の画面をこっそり出すタイミングです。
+    <strong>「もう止まれない」ゾーンに入った直後</strong>に出すのがポイント。
+    早すぎれば気づかれて止められ、遅すぎれば押し終わったあとになってしまいます。
+    つまりこの攻撃は、<strong>タイミングがすべて</strong>なのです。
+  </p>
+</section>
+
+<!-- ================= 2. 反応時間テスト ================= -->
+<section id="taiken">
+  <h2><span class="num">2</span>自分の反応時間をはかってみよう</h2>
+  <p class="sub">「0.2秒」がどれくらい短いか、体で感じてみる</p>
+
+  <p>
+    下のパネルをタップ（クリック）すると実験がはじまります。
+    赤い「まて…」のあいだはガマン。<strong>緑色に変わったしゅんかん</strong>にできるだけ早くもう一度押してください。
+  </p>
+
+  <div class="rt-box">
+    <button class="rt-pad" id="rtPad" type="button" aria-live="polite">
+      ここを押してスタート
+    </button>
+    <p class="rt-result" id="rtResult">結果はここに表示されます。</p>
+  </div>
+
+  <div class="note">
+    <b>やってみた感想は？</b>
+    多くの人は0.2〜0.3秒くらいになります。ためしに、緑になる前にフライングで押してみてください。
+    「押しちゃダメだ」と思っても指が止まらないことがあります。それこそが、この攻撃に使われている人間のクセです。
+  </div>
+</section>
+
+<!-- ================= 3. デモ ================= -->
+<section id="demo">
+  <h2><span class="num">3</span>2つのゲームで体験してみよう</h2>
+  <p class="sub">どちらも「わざと押しまちがえさせる」ためのしかけが入っています</p>
+
+  <p>
+    実際の攻撃では、どうやって「押すタイミング」をねらうのでしょうか。
+    ひとつの答えが、<strong>ゲームでタイミングを作り出してしまう</strong>という方法です。
+    ゲームなら、プレイヤーがいつボタンを押すかを攻撃側がある程度コントロールできるからです。
+  </p>
+
+  <!-- デモA -->
+  <div class="demo demo-a">
+    <div class="demo-head">
+      <span class="kind">デモ A ／ 連打でタイミングを作る</span>
+      <h3>連打バトル！</h3>
+      <p>青いバーを上にのばして勝つ、シンプルな連打ゲームです。</p>
+    </div>
+    <div class="demo-body">
+      <h4>遊び方</h4>
+      <p>
+        「ゲーム開始」を押すとスタート。青（自分）と赤（相手）が押し合いをしていて、
+        「連打！」ボタンを押すほど青が上にのびます。押さないでいると相手にじわじわ押しもどされます。
+        いちばん上まで行けば勝ち、いちばん下まで行くと負けです。
+      </p>
+
+      <h4>しかけのタネ</h4>
+      <p>
+        ゲームの途中、<strong>「連打！」ボタンが一瞬だけ「パワーアップ！」ボタンに入れかわります</strong>。
+        連打に夢中になっていると、入れかわったことに気づけず押してしまいます。
+        これが「押すつもりのなかったボタンを押してしまった」状態です。
+      </p>
+      <div class="specs">
+        <div class="spec"><span class="label">入れかわるまでの時間</span><span class="value">3〜5<small>秒ごと（ランダム）</small></span></div>
+        <div class="spec"><span class="label">入れかわっている時間</span><span class="value">0.2<small>秒だけ</small></span></div>
+        <div class="spec"><span class="label">1回の連打で進む量</span><span class="value">1.6<small>％</small></span></div>
+      </div>
+      <p>
+        注目してほしいのは<strong>「0.2秒」</strong>という数字です。
+        これは、さっき自分ではかった反応時間とほぼ同じ長さ。
+        つまり<strong>「気づいたときには、もう指が動いている」長さ</strong>にわざと合わせてあります。
+        表示時間をもっと長くすると気づいて止められますし、短すぎると押される前に消えてしまいます。
+      </p>
+
+      <h4>ここから分かること</h4>
+      <div class="note verm">
+        <b>夢中になっているときほど、あぶない</b>
+        連打中は「同じ場所を、なるべく速く押す」ことに集中しています。
+        この状態では、画面の変化を確認する余裕がなくなります。
+        本物の攻撃でも、ゲームや動画など<strong>夢中にさせるコンテンツ</strong>がよく使われます。
+      </div>
+      <a class="btn btn-blue" href="push.html">▶ 連打バトルを開く</a>
+    </div>
+  </div>
+
+  <!-- デモB -->
+  <div class="demo demo-b">
+    <div class="demo-head">
+      <span class="kind">デモ B ／ 決まった瞬間をねらう</span>
+      <h3>タイミングチャレンジ</h3>
+      <p>のびていくバーを、赤い線でぴたりと止めるゲームです。</p>
+    </div>
+    <div class="demo-body">
+      <h4>遊び方</h4>
+      <p>
+        「START」を押すと紫のバーが下からのびていきます。
+        赤いターゲットラインのところで「STOP」を押せれば成功。
+        バーの速さは毎回少しずつ変わるので、毎回集中して見る必要があります。
+      </p>
+
+      <h4>しかけのタネ</h4>
+      <p>
+        こちらは、STOPボタンの<strong>上に、緑色の「無料ポイントGET！」ボタンがぴったり重なって現れます</strong>。
+        しかも現れるのは、バーがターゲットの<strong>少し手前に来たとき</strong>。
+        つまり、あなたが「そろそろ押すぞ」と身がまえた、まさにその瞬間です。
+      </p>
+      <div class="specs">
+        <div class="spec"><span class="label">ワナが出る確率</span><span class="value">30<small>％（毎回ではない）</small></span></div>
+        <div class="spec"><span class="label">出るタイミング</span><span class="value">目標の8<small>％手前</small></span></div>
+        <div class="spec"><span class="label">成功できる範囲</span><span class="value">±2.5<small>％のみ</small></span></div>
+      </div>
+      <p>
+        ワナが出るのを<strong>毎回ではなく30％にしている</strong>のもポイントです。
+        毎回出れば「またか」と警戒されますが、たまにしか出なければ油断したままプレイを続けてしまいます。
+      </p>
+
+      <h4>ここから分かること</h4>
+      <div class="note verm">
+        <b>ボタンは「同じ場所」に重ねられる</b>
+        押す場所が変わらないので、手を動かす必要すらありません。
+        このように、本物のボタンの上に別のボタンを重ねてだます手口を
+        <strong>クリックジャッキング</strong>と呼びます。
+        「無料ポイントGET！」というおいしそうな文字も、思わず押させるためのしかけです。
+      </div>
+      <a class="btn btn-purple" href="timming.html">▶ タイミングチャレンジを開く</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4. 比較 ================= -->
+<section id="hikaku">
+  <h2><span class="num">4</span>2つのゲームをくらべてみよう</h2>
+  <p class="sub">同じ目的でも、だまし方はちがう</p>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th></th><th>A：連打バトル</th><th>B：タイミングチャレンジ</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>ねらい方</th><td>連打の勢いで<br>止まれなくさせる</td><td>「今だ」と身がまえた<br>瞬間をねらう</td></tr>
+        <tr><th>ワナの出し方</th><td>ボタンが入れかわる<br>（同じ場所）</td><td>ボタンが重なる<br>（同じ場所）</td></tr>
+        <tr><th>出るタイミング</th><td>ランダム（3〜5秒ごと）</td><td>ねらい撃ち（目標の手前）</td></tr>
+        <tr><th>出る頻度</th><td>毎回くり返し出る</td><td>3回に1回くらい</td></tr>
+        <tr><th>気づきにくい理由</th><td>速く押すことに<br>集中しているから</td><td>バーの位置ばかり<br>見ているから</td></tr>
+        <tr><th>近い実際の手口</th><td>ボタンのすり替え</td><td>クリックジャッキング</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note green">
+    <b>共通しているのは、この3つ</b>
+    ①ユーザーを何かに夢中にさせる　②押す場所を動かさない　③人が反応できないほど短い時間でワナを出す。
+    逆にいえば、この3つのどれかをくずせば、攻撃は成立しにくくなります。
+  </div>
+</section>
+
+<!-- ================= 5. 研究とのつながり ================= -->
+<section id="kenkyu">
+  <h2><span class="num">5</span>本物の研究では何を調べているの？</h2>
+  <p class="sub">ゲームの次のステップ：「スマホの動きから予測する」</p>
+
+  <p>
+    ここまでの2つのゲームは、<strong>攻撃側がタイミングを作り出す方法</strong>でした。
+    これを「方式1」とすると、研究ではもう一歩進んだ「方式2」が検討されています。
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">方式1：タイミングを作る</h3>
+      <p style="font-size:.93rem; margin:0">
+        ゲームなどでユーザーを誘導し、「いつ押すか」を攻撃側が決めてしまう方法。
+        このページの2つのデモがこれにあたります。ゲームを遊ばせる必要があります。
+      </p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">方式2：タイミングを予測する</h3>
+      <p style="font-size:.93rem; margin:0">
+        スマホの中の<strong>加速度センサ・ジャイロセンサ</strong>（傾きや動きを測る部品）の値から、
+        「この人はあと少しで画面を押すぞ」と<strong>予測</strong>する方法。ゲームを遊ばせなくても成立します。
+      </p>
+    </div>
+  </div>
+
+  <h3>方式2は、どうやって予測するの？</h3>
+  <p>
+    スマホを持ってボタンを押すとき、画面に指が届く前から、端末はほんのわずかに<strong>傾いたり、ねじれたり</strong>しています。
+    人によって・押すボタンによって、この動き方にはクセがあります。
+    そこで研究では、あらかじめ「このボタンを押すときの動きの形」を記録しておき、
+    今のセンサの動きがそれとどれくらい似ているかを<strong>DPマッチング</strong>という方法で毎秒100回も計算し続けます。
+    十分に似てきたら「もうすぐ押す」と判断して、その直前に確認ダイアログを出す——という流れです。
+  </p>
+
+  <div class="flow">
+    <div class="step"><span class="ico">📱</span><span class="t">センサで測る</span><span class="d">傾き・動きを記録</span></div>
+    <div class="step"><span class="ico">📊</span><span class="t">形をくらべる</span><span class="d">100回／秒で計算</span></div>
+    <div class="step hot"><span class="ico">⏱</span><span class="t">「もうすぐ押す」</span><span class="d">と予測する</span></div>
+    <div class="step hot"><span class="ico">⚠️</span><span class="t">ダイアログを出す</span><span class="d">止まれない瞬間に</span></div>
+  </div>
+
+  <h3>実験でわかった、むずかしさ</h3>
+  <p>
+    実際にやってみると、そう簡単にはいきませんでした。研究発表では次のような課題が報告されています。
+  </p>
+  <div class="note">
+    <b>課題1：判定をきびしくすると、表示が間に合わない</b>
+    「確実に押す直前だ」と分かってから出そうとすると、ダイアログを描画する時間が足りず、押し終わったあとになってしまう。
+  </div>
+  <div class="note">
+    <b>課題2：判定をゆるくすると、関係ない場面で出てしまう</b>
+    早めに出せるようにすると、押すつもりのない動きにも反応してしまい（誤検知）、ユーザーに「変だぞ」と気づかれてしまう。
+  </div>
+  <div class="note">
+    <b>課題3：スマホの機種によって速さがちがう</b>
+    ダイアログが出るまでの時間を調べると、ある機種では約0.02〜0.05秒なのに、別の機種では約0.14〜0.20秒。
+    つまり<strong>攻撃が成功しやすい機種と、しにくい機種がある</strong>ことが分かりました。
+  </div>
+  <p>
+    さらに、どのボタンからどのボタンへ指を動かすかによっても、予測のしやすさが大きく変わりました。
+    端末の持ち方や動かし方が毎回そろう組み合わせ（実験では「ボタン9→ボタン5」）では動きの再現性が高く、
+    予測しやすいという結果が出ています。
+  </p>
+
+  <div class="note blue">
+    <b>そして、ねらいは「広告」かもしれない</b>
+    確認ダイアログは画面の中央あたりに出るとは限らず、機種によって位置がちがいます。
+    そのため研究では、より現実的な標的として<strong>広告の誤タップ</strong>が挙げられています。
+    わざと押しまちがえさせるように作られたサイトのデザインは<strong>Slyware（スライウェア）</strong>と呼ばれ、
+    「閉じるボタンのすぐ横に広告を置く」といった形で、すでに現実に存在しています。
+  </div>
+</section>
+
+<!-- ================= 6. 対策 ================= -->
+<section id="mamoru">
+  <h2><span class="num">6</span>自分の身を守るには</h2>
+  <p class="sub">知っているだけで、ひっかかりにくくなります</p>
+
+  <ul class="checks">
+    <li><b>急に出てきた画面は、いったん指を止める</b>
+      画面が切りかわったら、まず指を画面から離す。これだけで「止まれない」状態から抜け出せます。</li>
+    <li><b>「無料」「今だけ」に反応しない練習をする</b>
+      タイミングチャレンジの「無料ポイントGET！」のように、おいしい言葉は考える時間をうばうために置かれています。</li>
+    <li><b>大事な操作は、ゲームや動画を閉じてから</b>
+      アプリのインストールや権限の許可は、夢中になっていない落ち着いた状態でやるのがいちばん安全です。</li>
+    <li><b>ダイアログは、読んでから押す</b>
+      「はい」の位置を覚えて反射で押すのではなく、何を聞かれているのかを一度読むくせをつけましょう。</li>
+    <li><b>OSとアプリを最新にしておく</b>
+      ボタンを重ねて隠すような手口は、OS側でも防ぐしくみが作られています。更新を後回しにしないことが大切です。</li>
+  </ul>
+
+  <div class="note green">
+    <b>この研究は、なんのためにあるの？</b>
+    攻撃の方法をくわしく調べるのは、悪用するためではありません。
+    「どうすれば攻撃できてしまうか」が分かって初めて、
+    「では、どう作れば防げるか」を考えられるからです。
+    たとえばこの研究からは、<strong>ダイアログが出た直後の一瞬はタップを受けつけない</strong>といった対策のヒントが得られます。
+  </div>
+</section>
+
+<!-- ================= 7. 用語集 ================= -->
+<section id="yougo">
+  <h2><span class="num">7</span>用語集</h2>
+  <p class="sub">クリックすると説明がひらきます</p>
+
+  <details>
+    <summary>ストップ信号反応時間（SSRT）</summary>
+    <div class="body">
+      「やめよう」と思ってから、実際に体の動きを止められるまでにかかる時間のこと。
+      だいたい0.2〜0.3秒ほどあります。この時間があるせいで、気づいても指が止まらないことが起きます。
+      このページのデモも、研究のもとになった攻撃手法も、すべてこの性質を利用しています。
+    </div>
+  </details>
+  <details>
+    <summary>誤操作誘発型（ごそうさゆうはつがた）の攻撃</summary>
+    <div class="body">
+      システムのすきをつくのではなく、<strong>人間に押しまちがいをさせる</strong>ことで目的を果たす攻撃のこと。
+      プログラムとしては「ふつうにボタンが押された」だけなので、機械側からは正常な操作に見えてしまうのがやっかいな点です。
+    </div>
+  </details>
+  <details>
+    <summary>クリックジャッキング</summary>
+    <div class="body">
+      本物のボタンの上に、透明な（または別の）ボタンを重ねておき、ユーザーの操作を横取りする手口。
+      「タイミングチャレンジ」の緑のボタンがまさにこれです。押した場所は同じなのに、押した相手がすり替わっています。
+    </div>
+  </details>
+  <details>
+    <summary>ダークパターン</summary>
+    <div class="body">
+      ユーザーが自分では望んでいない選択をしてしまうように、わざと作られた画面デザインのこと。
+      「同意しない」ボタンをうすい灰色にして見つけにくくする、といったものが代表例です。
+    </div>
+  </details>
+  <details>
+    <summary>Slyware（スライウェア）</summary>
+    <div class="body">
+      ダークパターンを使って、スマホの広告をわざと押しまちがえさせるように設計されたWebサイトのデザインを指す言葉。
+      たとえば、記事のリンクのすぐそばに同じ見た目の広告を置く、といった手口があります。
+    </div>
+  </details>
+  <details>
+    <summary>加速度センサ・ジャイロセンサ</summary>
+    <div class="body">
+      スマホの中に入っている小さな部品。加速度センサは「どちらにどれだけ動いたか」、ジャイロセンサは「どれだけ回転したか」を測ります。
+      画面の向きを自動で変えたり、歩数を数えたりするのに使われますが、
+      この研究では「もうすぐ画面を押しそうだ」と予測するために使われました。
+    </div>
+  </details>
+  <details>
+    <summary>DPマッチング（動的計画法によるマッチング）</summary>
+    <div class="body">
+      2つのデータの形がどれくらい似ているかを、数値にして比べる方法。
+      速さが多少ちがっていても「同じ形」と判定できるのが特長で、音声認識などにも使われています。
+      この研究では、センサの動きがお手本の動きとどれだけ似ているかを測るために使われました。
+    </div>
+  </details>
+</section>
+
+</main>
+
+<!-- ================= フッター ================= -->
+<footer>
+  <div class="wrap">
+    <h2><span class="num">📚</span>もとになった研究・参考文献</h2>
+    <p style="margin-top:0">
+      平田晃河, 金岡晃, 柿崎淑郎, 大東俊博「スマートフォンの動きを利用した誤操作誘発型の攻撃手法についての検討」<br>
+      情報処理学会 セキュリティ心理学とトラスト研究会（SPT）, 2024年3月21日
+    </p>
+    <ol>
+      <li>川口宗也, 金岡晃, 柿崎淑郎, 倉重宏樹, 中谷裕教, 大東俊博「人の反応時間に注目した誤操作誘発型パーミッション奪取手法についての検討」情報処理学会研究報告, Vol.2022-SPT-49(12), pp.1-6 (2022)</li>
+      <li>濵野雅史, 新井イスマイル「加速度センサ・ジャイロセンサを併用したスマートフォンの利用認証手法の提案」情報処理学会研究報告, Vol.2020-MBL-70, No.17, 5 pages</li>
+      <li>向山浩平, 藤田真浩, 白井丈晴, 西垣正勝「Slyware対策：意図しないタップを誘発するWebサイトの脅威とその対策に関する研究」情報処理学会論文誌, Vol.59, No.12, pp.2166-2179</li>
+    </ol>
+    <p class="credit">
+      このページに置かれた2つのゲームは、攻撃のしくみを安全に体験するための<strong>教材</strong>です。
+      個人情報を集めたり、外部に送信したりすることは一切ありません。<br>
+      色は、色の見え方に個人差がある方にも区別しやすい配色（カラーユニバーサルデザイン）を採用し、
+      色だけでなく文字・記号・線の形でも情報が伝わるように作っています。
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ===== 1. 反応のおくれタイムライン ===== */
+  var runner = document.getElementById('tlRunner');
+  var trap   = document.getElementById('tlTrap');
+  var msg    = document.getElementById('tlMsg');
+  var tlBtn  = document.getElementById('tlBtn');
+  var playing = false;
+
+  var script = [
+    { at:  0, text:'① ボタンが目に入りました。' },
+    { at: 38, text:'② 「押そう」と脳が決めました。' },
+    { at: 62, text:'③ ここで攻撃者が別の画面をこっそり表示！　でも指はもう動きはじめています。' },
+    { at: 80, text:'④ 画面が変わったことに気づきました。でも……止まりません。' },
+    { at:100, text:'⑤ 押してしまった！　これが「誤操作の誘発」です。' }
+  ];
+
+  function play(){
+    if (playing) return;
+    playing = true;
+    tlBtn.disabled = true;
+    tlBtn.style.opacity = '.55';
+    trap.classList.remove('on');
+
+    var pct = 0, idx = 0;
+    runner.style.left = '0%';
+    msg.textContent = script[0].text;
+
+    var timer = setInterval(function(){
+      pct += 1.4;
+      if (pct > 100) pct = 100;
+      runner.style.left = pct + '%';
+
+      if (pct >= 62) trap.classList.add('on');
+
+      while (idx + 1 < script.length && pct >= script[idx + 1].at) {
+        idx++;
+        msg.textContent = script[idx].text;
+      }
+
+      if (pct >= 100) {
+        clearInterval(timer);
+        playing = false;
+        tlBtn.disabled = false;
+        tlBtn.style.opacity = '1';
+        tlBtn.textContent = '▶ もう一度';
+      }
+    }, 28);
+  }
+  tlBtn.addEventListener('click', play);
+
+  /* ===== 2. 反応時間テスト ===== */
+  var pad    = document.getElementById('rtPad');
+  var result = document.getElementById('rtResult');
+  var state  = 'idle';        /* idle → waiting → go → done */
+  var goTime = 0;
+  var waitTimer = null;
+  var records = [];
+
+  function setPad(cls, text){
+    pad.className = 'rt-pad' + (cls ? ' ' + cls : '');
+    pad.textContent = text;
+  }
+
+  pad.addEventListener('click', function(){
+    if (state === 'idle' || state === 'done') {
+      state = 'waiting';
+      setPad('waiting', 'まて… （緑になったら押す）');
+      result.textContent = '赤いあいだは押さないでね。';
+      /* 1.2〜4.2秒のランダム待ち */
+      waitTimer = setTimeout(function(){
+        state = 'go';
+        goTime = Date.now();
+        setPad('go', 'いま押す！');
+      }, 1200 + Math.random() * 3000);
+
+    } else if (state === 'waiting') {
+      /* フライング */
+      clearTimeout(waitTimer);
+      state = 'done';
+      setPad('', 'フライング！　もう一度押してスタート');
+      result.innerHTML = '<strong style="color:var(--verm); font-size:1.1rem">早すぎ！</strong><br>'
+        + '「押しちゃダメ」と分かっていても指が動いてしまう。まさにこれが、攻撃に利用されている人間のクセです。';
+
+    } else if (state === 'go') {
+      var ms = Date.now() - goTime;
+      state = 'done';
+      records.push(ms);
+      setPad('', 'もう一度押してスタート');
+
+      var comment;
+      if (ms < 180)      comment = 'とても速い！　でも、これでも「見てから止まる」には足りません。';
+      else if (ms < 260) comment = 'だいたい平均くらい。人間の標準的な反応の速さです。';
+      else if (ms < 400) comment = 'ゆっくりめ。集中しているときはもう少し速くなります。';
+      else               comment = '少し気を抜いていたかも。もう一度ためしてみましょう。';
+
+      var avg = Math.round(records.reduce(function(a,b){return a+b;},0) / records.length);
+      var extra = records.length > 1
+        ? '　／　' + records.length + '回の平均：' + avg + 'ミリ秒'
+        : '';
+
+      result.innerHTML = '<strong>' + ms + '</strong> ミリ秒（' + (ms/1000).toFixed(2) + '秒）' + extra
+        + '<br>' + comment
+        + '<br><span style="font-size:.85rem; color:var(--ink-weak)">'
+        + '「連打バトル」のワナが出ている時間は、たった200ミリ秒です。</span>';
+    }
+  });
+})();
+</script>
+</body>
+</html>
